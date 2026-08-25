@@ -26,7 +26,7 @@ class CollectionScreen(context: Context) : Screen(context) {
     private val engine = GameEngine.get()
 
     init {
-        applyBackdrop(Color.parseColor("#070A18"), Color.parseColor("#111834"), Color.parseColor("#070A18"))
+        applyBackdrop(Color.parseColor("#C4070A18"), Color.parseColor("#A0111834"), Color.parseColor("#C4070A18"))
 
         val root = LinearLayout(context)
         root.orientation = LinearLayout.VERTICAL

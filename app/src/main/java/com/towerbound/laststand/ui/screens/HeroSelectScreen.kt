@@ -35,7 +35,7 @@ class HeroSelectScreen(context: Context) : Screen(context) {
     private var selectedHero: String = MetaSession.profile.selectedHero
 
     init {
-        applyBackdrop(Color.parseColor("#070A18"), Color.parseColor("#131a38"), Color.parseColor("#070A18"))
+        applyBackdrop(Color.parseColor("#C0070A18"), Color.parseColor("#9A131A38"), Color.parseColor("#C0070A18"))
 
         val root = LinearLayout(context)
         root.orientation = LinearLayout.VERTICAL

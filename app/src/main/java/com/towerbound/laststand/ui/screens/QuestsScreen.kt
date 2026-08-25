@@ -27,7 +27,7 @@ class QuestsScreen(context: Context) : Screen(context) {
     private lateinit var currencyBar: LinearLayout
 
     init {
-        applyBackdrop(Color.parseColor("#070A18"), Color.parseColor("#121935"), Color.parseColor("#070A18"))
+        applyBackdrop(Color.parseColor("#C4070A18"), Color.parseColor("#A0121935"), Color.parseColor("#C4070A18"))
 
         val root = LinearLayout(context)
         root.orientation = LinearLayout.VERTICAL

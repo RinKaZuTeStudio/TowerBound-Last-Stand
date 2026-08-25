@@ -43,6 +43,7 @@ class GameFlow private constructor(private val activity: MainActivity) {
     private var ultimateButton: ActionButton? = null
     private var hudLastUpdate = 0L
     private var hudStatus: android.widget.TextView? = null
+    private var gameHud: com.towerbound.laststand.ui.GameHudView? = null
 
     private val playerController = PlayerController(engine.input)
 
@@ -338,21 +339,13 @@ class GameFlow private constructor(private val activity: MainActivity) {
         ultimateButton = ultimate
         dashButton = dash
 
-        // --- top HUD: wave / enemies / tower HP + pause (top-right) ---
-        hudStatus = android.widget.TextView(activity).apply {
-            setTextColor(0xFFF4F6FF.toInt())
-            textSize = 15f
-            typeface = android.graphics.Typeface.DEFAULT_BOLD
-            setShadowLayer(6f, 0f, 2f, android.graphics.Color.argb(190, 0, 0, 0))
-            gravity = android.view.Gravity.START
-        }
-        val statusLp = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.TOP or Gravity.START
-        )
-        statusLp.topMargin = dp(12f)
-        statusLp.leftMargin = dp(14f)
-        container.addView(hudStatus, statusLp)
+        // --- pixel-art HUD panels (tower HP/shield, wave, clock, hero bars) ---
+        val hudView = com.towerbound.laststand.ui.GameHudView(activity)
+        hudView.heroId = engine.currentHeroId
+        container.addView(hudView, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+        gameHud = hudView
 
         val pause = android.widget.ImageButton(activity).apply {
             setImageResource(android.R.drawable.ic_media_pause)
@@ -387,6 +380,7 @@ class GameFlow private constructor(private val activity: MainActivity) {
                 val waves = engine.system<WaveSystem>()
                 val enemies = engine.system<EnemyManager>()
                 val tower = engine.system<TowerSystem>()?.tower
+                val xpSys = engine.system<XpSystem>()
                 PerformanceManager.onHudTick(engine)
                 // crash-recovery snapshot every ~15 s of sim time
                 snapshotTimer += 0.1f
@@ -401,13 +395,19 @@ class GameFlow private constructor(private val activity: MainActivity) {
                     dashButton?.postInvalidate()
                     abilityButton?.postInvalidate()
                     ultimateButton?.postInvalidate()
-                    hudStatus?.text = buildString {
-                        append(activity.getString(R.string.hud_wave, waves?.currentWave ?: 1))
-                        append("   ").append(activity.getString(R.string.hud_enemies, enemies?.activeCount() ?: 0))
-                        if (tower != null && tower.alive) {
-                            append("   ").append(activity.getString(R.string.hud_tower))
-                            append(" ").append((tower.hpFraction() * 100).toInt()).append("%")
-                        }
+                    // pixel-art HUD snapshot
+                    val env = engine.system<com.towerbound.laststand.env.EnvironmentSystem>()
+                    gameHud?.let { hud ->
+                        hud.towerHp = tower?.hpFraction() ?: 1f
+                        hud.towerShield = tower?.shieldFraction() ?: 0f
+                        hud.wave = waves?.currentWave ?: 1
+                        hud.enemyCount = enemies?.activeCount() ?: 0
+                        hud.heroHp = p?.hpFraction() ?: 1f
+                        hud.heroXp = xpSys?.let { xp -> (xp.xp / xp.xpToNext).coerceIn(0f, 1f) } ?: 0f
+                        hud.heroLevel = xpSys?.level ?: 1
+                        hud.timeOfDay = env?.timeOfDay ?: com.towerbound.laststand.env.TimeOfDay.DAY
+                        hud.clockFraction = env?.clockFraction() ?: 0.12f
+                        hud.postInvalidate()
                     }
                 }
             }
@@ -450,7 +450,7 @@ class GameFlow private constructor(private val activity: MainActivity) {
         appear.start(); fade.start()
     }
 
-    fun setStatus(text: String) { hudStatus?.text = text }
+    fun setStatus(text: String) { hudStatus?.text = text; gameHud?.postInvalidate() }
 
     /** Persist a crash-recovery snapshot of the current run. */
     private fun saveRunSnapshot() {
@@ -533,6 +533,7 @@ class GameFlow private constructor(private val activity: MainActivity) {
         hudContainer = null
         joystick = null
         hudStatus = null
+        gameHud = null
         engine.hudUpdateHook = null
         PerformanceManager.hideOverlay()
         AudioDirector.setMood(AudioDirector.MusicMood.MENU)

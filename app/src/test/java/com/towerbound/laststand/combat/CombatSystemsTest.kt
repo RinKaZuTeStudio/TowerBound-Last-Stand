@@ -374,7 +374,8 @@ class DamageNumberTest {
         val n = DamageNumber(0f, 0f, 100, false, 0xFFFFFFFF.toInt())
         assertEquals(0f, n.offsetY(), 0.01f)
         n.update(0.4f)
-        assertTrue(n.offsetY() < -30f)
+        // canonical coordinates: rising = +Y (up on screen)
+        assertTrue(n.offsetY() > 30f)
         assertTrue(n.alive)
         repeat(60) { n.update(1f / 60f) }
         assertFalse(n.alive)

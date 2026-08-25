@@ -18,6 +18,177 @@ import kotlin.random.Random
  */
 object EnvironmentPainter {
 
+    /* ---------- seamless pixel-art terrain ---------- */
+
+    /**
+     * Tileable pixel-art grass tile: the pattern wraps on both axes so any
+     * number of adjacent tiles form one continuous meadow with no visible
+     * grid seams (fixes the rectangular tile seam problem at the root).
+     *
+     * Painted at high resolution first, then converted to a controlled
+     * pixel-art grid (32x32 art pixels) with wrapped decoration clusters.
+     */
+    fun seamlessTerrain(outSize: Int = 256, seed: Long = 1337L): Bitmap {
+        val grid = 32 // art-pixel grid
+        val hi = outSize
+        val hiBmp = Bitmap.createBitmap(hi, hi, Bitmap.Config.ARGB_8888)
+        val c = Canvas(hiBmp)
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        val rng = Random(seed)
+        val s = hi.toFloat()
+
+        // base meadow: soft vertical banding
+        p.shader = LinearGradient(0f, 0f, s * 0.3f, s,
+            Color.parseColor("#417F3C"), Color.parseColor("" + "#336630"), Shader.TileMode.CLAMP)
+        c.drawRect(0f, 0f, s, s, p)
+        p.shader = null
+
+        // wrapped large tonal blobs (draw 9x for toroidal wrap)
+        fun wrapBlob(bx: Float, by: Float, br: Float, col: Int, alpha: Int) {
+            for (ox in intArrayOf(-1, 0, 1)) {
+                for (oy in intArrayOf(-1, 0, 1)) {
+                    val x = bx + ox * s
+                    val y = by + oy * s
+                    if (x + br < 0 || x - br > s || y + br < 0 || y - br > s) continue
+                    p.shader = RadialGradient(x, y, br,
+                        Color.argb(alpha, Color.red(col), Color.green(col), Color.blue(col)),
+                        Color.argb(0, Color.red(col), Color.green(col), Color.blue(col)), Shader.TileMode.CLAMP)
+                    c.drawCircle(x, y, br, p)
+                    p.shader = null
+                }
+            }
+        }
+        repeat(7) {
+            wrapBlob(rng.nextFloat() * s, rng.nextFloat() * s, s * (0.16f + rng.nextFloat() * 0.2f),
+                Color.parseColor("#4E9245"), 70)
+        }
+        repeat(5) {
+            wrapBlob(rng.nextFloat() * s, rng.nextFloat() * s, s * (0.12f + rng.nextFloat() * 0.16f),
+                Color.parseColor("#2C572A"), 80)
+        }
+        // soil patches (wrapped)
+        repeat(6) {
+            wrapBlob(rng.nextFloat() * s, rng.nextFloat() * s, s * (0.05f + rng.nextFloat() * 0.06f),
+                Color.parseColor("#6B5236"), 60)
+        }
+
+        // wrapped grass blade clusters (tiny strokes)
+        p.strokeWidth = s / grid * 0.9f
+        p.strokeCap = Paint.Cap.ROUND
+        repeat(150) {
+            val bx = rng.nextFloat() * s
+            val by = rng.nextFloat() * s
+            val len = s / grid * (1f + rng.nextFloat() * 1.6f)
+            val shade = 0.72f + rng.nextFloat() * 0.55f
+            p.color = Color.rgb((62 * shade).toInt().coerceIn(0, 255), (130 * shade).toInt().coerceIn(0, 255), (58 * shade).toInt().coerceIn(0, 255))
+            val dx = (rng.nextFloat() - 0.5f) * len
+            c.drawLine(bx, by, bx + dx, by - len, p)
+            // wrap copies when near edges
+            if (bx < len) c.drawLine(bx + s, by, bx + s + dx, by - len, p)
+            if (bx > s - len) c.drawLine(bx - s, by, bx - s + dx, by - len, p)
+            if (by < len) c.drawLine(bx, by + s, bx + dx, by + s - len, p)
+            if (by > s - len) c.drawLine(bx, by - s, bx + dx, by - s - len, p)
+        }
+        // tiny flowers (wrapped)
+        repeat(10) {
+            val fx = rng.nextFloat() * s
+            val fy = rng.nextFloat() * s
+            p.color = if (rng.nextBoolean()) Color.argb(220, 255, 238, 130) else Color.argb(200, 255, 255, 255)
+            val r = s / grid * 0.55f
+            c.drawCircle(fx, fy, r, p)
+            if (fx < r) c.drawCircle(fx + s, fy, r, p)
+            if (fx > s - r) c.drawCircle(fx - s, fy, r, p)
+            if (fy < r) c.drawCircle(fx, fy + s, r, p)
+            if (fy > s - r) c.drawCircle(fx, fy - s, r, p)
+        }
+
+        // pixel-art conversion: art pixels = outSize/grid
+        return PixelArtGenerator.pixelize(
+            hiBmp,
+            pixelSize = outSize / grid,
+            outline = false,
+            dither = true,
+            paletteColors = intArrayOf(
+                Color.parseColor("#294d27"), Color.parseColor("#2f5c2c"),
+                Color.parseColor("#336630"), Color.parseColor("#3a7335"),
+                Color.parseColor("#417f3c"), Color.parseColor("#4a8c42"),
+                Color.parseColor("#559a4c"), Color.parseColor("#5fa955"),
+                Color.parseColor("#6b5236"), Color.parseColor("#7d6244"),
+                Color.parseColor("#fff4b0"), Color.parseColor("#ffffff")
+            )
+        )
+    }
+
+    /* ---------- menu scene sky + distant hills ---------- */
+
+    /**
+     * Cinematic dusk sky: deep indigo zenith -> violet -> warm amber horizon
+     * with scattered pixel stars. Rendered as chunky pixel bands (stylized
+     * sky, not a smooth vector gradient).
+     */
+    fun skyGradient(w: Int = 64, h: Int = 512): Bitmap {
+        val hi = Bitmap.createBitmap(w * 4, h * 4, Bitmap.Config.ARGB_8888)
+        val c = Canvas(hi)
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        val s = hi.height.toFloat()
+        p.shader = LinearGradient(
+            0f, 0f, 0f, s,
+            intArrayOf(
+                Color.parseColor("#0b0f2a"),
+                Color.parseColor("#1a1f4d"),
+                Color.parseColor("#3c2a6e"),
+                Color.parseColor("#7a3b6e"),
+                Color.parseColor("#c96a4a"),
+                Color.parseColor("#f2a65a")
+            ),
+            floatArrayOf(0f, 0.34f, 0.55f, 0.72f, 0.88f, 1f), Shader.TileMode.CLAMP
+        )
+        c.drawRect(0f, 0f, hi.width.toFloat(), s, p)
+        p.shader = null
+        // pixel stars in the upper half
+        val rng = Random(99L)
+        for (i in 0 until 46) {
+            val sx = rng.nextFloat() * hi.width
+            val sy = rng.nextFloat() * s * 0.5f
+            val star = 255 - (rng.nextFloat() * 90).toInt()
+            p.color = Color.argb(star, 255, 250, 235)
+            val r = if (rng.nextFloat() < 0.2f) hi.width / 26f else hi.width / 40f
+            c.drawCircle(sx, sy, r, p)
+        }
+        return PixelArtGenerator.pixelize(hi, pixelSize = 16, outline = false, dither = true)
+    }
+
+    /** Rolling silhouette hills for the parallax horizon. */
+    fun hills(seed: Long, tint: String, w: Int = 720, h: Int = 220): Bitmap {
+        val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val c = Canvas(bmp)
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        val rng = Random(seed)
+        val col = Color.parseColor(tint)
+        val path = Path()
+        path.moveTo(0f, h.toFloat())
+        var x = 0f
+        var y = h * (0.45f + rng.nextFloat() * 0.15f)
+        path.lineTo(0f, y)
+        val peaks = 6
+        for (i in 1..peaks) {
+            val nx = i / peaks.toFloat() * w
+            val ny = h * (0.3f + rng.nextFloat() * 0.4f)
+            path.quadTo((x + nx) / 2f, kotlin.math.min(y, ny) - h * 0.14f, nx, ny)
+            x = nx; y = ny
+        }
+        path.lineTo(w.toFloat(), h.toFloat())
+        path.close()
+        p.color = col
+        c.drawPath(path, p)
+        // subtle top rim light
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 4f
+        p.color = PixelArtGenerator.lighten(col, 0.25f)
+        c.drawPath(path, p)
+        return PixelArtGenerator.pixelize(bmp, pixelSize = 6, outline = false, dither = true)
+    }
+
     /* ---------- terrain tile (seamless-ish grass) ---------- */
 
     fun terrainTile(seed: Long = 1L, size: Int = 256): Bitmap {

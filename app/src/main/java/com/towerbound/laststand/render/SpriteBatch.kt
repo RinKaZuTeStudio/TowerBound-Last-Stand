@@ -154,10 +154,14 @@ class SpriteBatch(maxQuads: Int = 2048) {
             vertexData[o + 2] = u; vertexData[o + 3] = v
             vertexData[o + 4] = r; vertexData[o + 5] = g; vertexData[o + 6] = b; vertexData[o + 7] = a
         }
-        corner(-hw, -hh, u0, v0, 0)
-        corner(hw, -hh, u1, v0, 1)
-        corner(hw, hh, u1, v1, 2)
-        corner(-hw, hh, u0, v1, 3)
+        // Canonical coordinate system: WORLD +Y = UP, SCREEN +Y = DOWN.
+        // Android bitmaps have row 0 at the top (V=0 = top of image), so the
+        // quad's TOP vertices must sample v0 (image top) and BOTTOM vertices
+        // v1 (image bottom) for sprites to render upright in a Y-up world.
+        corner(-hw, -hh, u0, v1, 0)
+        corner(hw, -hh, u1, v1, 1)
+        corner(hw, hh, u1, v0, 2)
+        corner(-hw, hh, u0, v0, 3)
         quadCount++
     }
 
@@ -242,35 +246,40 @@ class SpriteBatch(maxQuads: Int = 2048) {
  */
 class TextureManager {
 
-    class Entry(val bitmap: Bitmap) {
+    class Entry(val bitmap: Bitmap, val nearest: Boolean) {
         var texId = 0
     }
 
     private val entries = HashMap<String, Entry>()
     private var bound = -1
 
-    fun get(key: String, bitmap: Bitmap): Int {
+    /**
+     * @param nearest true = pixel-art crisp look (NEAREST filtering);
+     *                false = smooth (glows, text atlas).
+     */
+    fun get(key: String, bitmap: Bitmap, nearest: Boolean = true): Int {
         var e = entries[key]
         if (e == null) {
-            e = Entry(bitmap)
+            e = Entry(bitmap, nearest)
             entries[key] = e
-            e.texId = upload(bitmap)
+            e.texId = upload(bitmap, nearest)
         } else if (e.texId == 0) {
-            e.texId = upload(bitmap)
+            e.texId = upload(bitmap, nearest)
         }
         return e.texId
     }
 
     fun idOf(key: String): Int = entries[key]?.texId ?: 0
 
-    private fun upload(bitmap: Bitmap): Int {
+    private fun upload(bitmap: Bitmap, nearest: Boolean): Int {
         val ids = IntArray(1)
         GLES20.glGenTextures(1, ids, 0)
         val id = ids[0]
         if (id == 0) return 0
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, id)
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
+        val filter = if (nearest) GLES20.GL_NEAREST else GLES20.GL_LINEAR
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, filter)
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, filter)
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
@@ -282,7 +291,7 @@ class TextureManager {
     fun reloadAll() {
         for (e in entries.values) {
             if (e.texId != 0) GLES20.glDeleteTextures(1, intArrayOf(e.texId), 0)
-            e.texId = upload(e.bitmap)
+            e.texId = upload(e.bitmap, e.nearest)
         }
         bound = -1
         com.towerbound.laststand.core.GameLog.i("TexMgr", "reloaded ${entries.size} textures after context loss")

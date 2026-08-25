@@ -55,7 +55,7 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
         val env = engine.system<com.towerbound.laststand.env.EnvironmentSystem>() ?: return
         if (env.tintA <= 0.004f) return
         val glow = AssetRepository.fx("glow_void") ?: return
-        val tex = textures.get("fx_glow_void", glow)
+        val tex = textures.get("fx_glow_void", glow, nearest = false)
         batch.setTint(env.tintR, env.tintG, env.tintB, env.tintA)
         // cover the visible viewport in world coords
         batch.draw(tex, camera.x, camera.y, camera.viewWidth + 40f, camera.viewHeight + 40f)
@@ -66,10 +66,10 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
 
     private fun drawTerrain(batch: SpriteBatch, textures: TextureManager, camera: Camera) {
         val world = engine.world ?: return
+        val bmp = AssetRepository.terrain(0L) // shared seamless tileable texture
+        val tex = textures.get("terrain_base", bmp)
         for (tile in world.terrainTiles) {
             if (!isVisible(camera, tile.x, tile.y, world.tileSize)) continue
-            val bmp = AssetRepository.terrain(tile.seed)
-            val tex = textures.get("terrain_${tile.variant}", bmp)
             batch.draw(tex, tile.x, tile.y, world.tileSize, world.tileSize)
         }
     }
@@ -116,7 +116,7 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
         val turretBmp = AssetRepository.turret()
         val turretTex = textures.get("turret", turretBmp)
         val rot = t * 24f
-        batch.draw(turretTex, world.centerX, world.centerY - 40f, 110f, 110f, rot)
+        batch.draw(turretTex, world.centerX, world.centerY + 40f, 110f, 110f, rot)
     }
 
     private fun towerStageFor(hpFraction: Float): Int = when {
@@ -186,8 +186,8 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
         batch.draw(tex, b.x, b.y, size, size, 0f, u0, 0f, u1, 1f)
         batch.setTint(1f, 1f, 1f, 1f)
 
-        // boss HP bar (top of screen style, drawn above entity for now)
-        drawHealthBar(batch, textures, b.x, b.y - size * 0.6f, size * 0.9f, 10f, b.hpFraction(), 0xFFE53935.toInt())
+        // boss HP bar above the boss (world +Y = up)
+        drawHealthBar(batch, textures, b.x, b.y + size * 0.6f, size * 0.9f, 10f, b.hpFraction(), 0xFFE53935.toInt())
     }
 
     /** Telegraph rings rendered from boss system callback storage. */
@@ -200,7 +200,7 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
     private fun drawTelegraphs(batch: SpriteBatch, textures: TextureManager) {
         if (telegraphList.isEmpty()) return
         val ring = AssetRepository.fx("ring_red") ?: return
-        val tex = textures.get("fx_ring_red", ring)
+        val tex = textures.get("fx_ring_red", ring, nearest = false)
         val it = telegraphList.iterator()
         while (it.hasNext()) {
             val tg = it.next()
@@ -263,9 +263,9 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
             batch.draw(tex, e.x, e.y, size, size, 0f, u0, 0f, u1, 1f)
             batch.setTint(1f, 1f, 1f, 1f)
 
-            // HP sliver for damaged enemies
+            // HP sliver above damaged enemies (world +Y = up)
             if (e.alive && e.hpFraction() < 0.999f && !e.isBoss) {
-                drawHealthBar(batch, textures, e.x, e.y - size * 0.62f, size * 0.8f, 6f, e.hpFraction(), 0xFF4757.toInt())
+                drawHealthBar(batch, textures, e.x, e.y + size * 0.62f, size * 0.8f, 6f, e.hpFraction(), 0xFF4757.toInt())
             }
         }
     }
@@ -277,7 +277,7 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
     private fun drawHealthBar(batch: SpriteBatch, textures: TextureManager, cx: Float, cy: Float,
                                w: Float, h: Float, fraction: Float, color: Int) {
         val glow = AssetRepository.fx("glow_shield") ?: return
-        val tex = textures.get("fx_glow_shield", glow)
+        val tex = textures.get("fx_glow_shield", glow, nearest = false)
         batch.setTint(0.08f, 0.09f, 0.16f, 0.85f)
         batch.draw(tex, cx, cy, w, h)
         batch.setTint(Color.red(color) / 255f, Color.green(color) / 255f, Color.blue(color) / 255f, 0.95f)
@@ -293,7 +293,7 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
         for (e in mgr.active) {
             if (!e.alive) continue
             var iconX = e.x - 24f
-            val iconY = e.y - e.radius * 2.6f
+            val iconY = e.y + e.radius * 2.6f // above the head (world +Y = up)
             for (kind in com.towerbound.laststand.combat.StatusKind.entries) {
                 if (combat.statuses.has(e, kind)) {
                     val bmp = AssetRepository.fx("status_${kind.name.lowercase()}") ?: continue
@@ -311,25 +311,21 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
         val combat = engine.system<com.towerbound.laststand.combat.CombatSystem>() ?: return
         if (combat.projectiles.activeCount() == 0) return
         for (p in combat.projectiles.active) {
-            val bmp = AssetRepository.fx("glow_${p.visual}") ?: continue
-            val tex = textures.get("fx_glow_${p.visual}", bmp)
+            val ang = Math.toDegrees(kotlin.math.atan2(p.dirY.toDouble(), p.dirX.toDouble()).toDouble()).toFloat()
             if (glowPass) {
-                // glow halo
-                batch.setAlpha(0.55f)
+                // additive glow halo behind the sprite
+                val glow = AssetRepository.fx("glow_${p.visual}") ?: continue
+                val tex = textures.get("fx_glow_${p.visual}", glow, nearest = false)
+                batch.setAlpha(0.5f)
                 batch.draw(tex, p.x, p.y, p.radius * 6f, p.radius * 6f)
                 batch.setAlpha(1f)
             } else {
-                // core dot + motion streak
-                val ang = Math.toDegrees(kotlin.math.atan2(p.dirY.toDouble(), p.dirX.toDouble()).toDouble()).toFloat()
-                val streak = AssetRepository.fx("spark_${p.visual}")
-                if (streak != null) {
-                    val stex = textures.get("fx_spark_${p.visual}", streak)
-                    val sl = p.radius * 3.6f
-                    val px = p.x - p.dirX * sl * 0.5f
-                    val py = p.y - p.dirY * sl * 0.5f
-                    batch.draw(stex, px, py, sl, p.radius * 1.7f, ang)
-                }
-                batch.draw(tex, p.x, p.y, p.radius * 2.6f, p.radius * 2.6f)
+                // distinct pixel-art projectile sprite, rotated to direction
+                val sprite = AssetRepository.fx("proj_${p.visual}")
+                    ?: AssetRepository.fx("glow_${p.visual}") ?: continue
+                val tex = textures.get("fx_proj_${p.visual}", sprite)
+                val size = p.radius * 3.4f
+                batch.draw(tex, p.x, p.y, size, size, ang)
             }
         }
     }
@@ -341,7 +337,9 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
         for (p in fx.activeList) {
             if (p.additive != additive) continue
             val bmp = AssetRepository.fx(p.texture) ?: continue
-            val tex = textures.get("fx_${p.texture}", bmp)
+            // glow/smoke/spark textures are smooth light; others are pixel art
+            val smooth = p.texture.startsWith("glow_") || p.texture.startsWith("spark_") || p.texture == "smoke"
+            val tex = textures.get("fx_${p.texture}", bmp, nearest = !smooth)
             val t = fx.lifeT(p)
             batch.setAlpha(p.alpha * (0.25f + 0.75f * t))
             batch.draw(tex, p.x, p.y, fx.sizeOf(p) * 2f, fx.sizeOf(p) * 2f, p.angle)
@@ -389,7 +387,7 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
             val px = c.x + (camera.x - world.centerX) * (1f - parallax)
             val py = c.y + (camera.y - world.centerY) * (1f - parallax)
             if (!isVisible(camera, px, py, 300f)) continue
-            batch.draw(tex, px, py - 60f, bmp.width * c.scale, bmp.height * c.scale)
+            batch.draw(tex, px, py + 60f, bmp.width * c.scale, bmp.height * c.scale)
         }
         batch.setTint(1f, 1f, 1f, 1f)
     }
@@ -398,13 +396,13 @@ class WorldRenderer(private val engine: GameEngine, private val glRenderer: GLRe
 
     private fun drawWorldEdge(batch: SpriteBatch, textures: TextureManager, camera: Camera, world: com.towerbound.laststand.world.GameWorld) {
         val glow = AssetRepository.fx("glow_void") ?: return
-        val tex = textures.get("fx_glow_void", glow)
+        val tex = textures.get("fx_glow_void2", glow, nearest = false)
         batch.setTint(0f, 0f, 0.05f, 0.8f)
-        // top edge shadow band
-        batch.draw(tex, world.centerX, 0f, world.width * 1.4f, 260f)
-        batch.draw(tex, world.centerX, world.height, world.width * 1.4f, 260f)
-        batch.draw(tex, 0f, world.centerY, 260f, world.height * 1.4f)
-        batch.draw(tex, world.width, world.centerY, 260f, world.height * 1.4f)
+        // dark vignette bands just outside each map edge
+        batch.draw(tex, world.centerX, -60f, world.width * 1.4f, 260f)
+        batch.draw(tex, world.centerX, world.height + 60f, world.width * 1.4f, 260f)
+        batch.draw(tex, -60f, world.centerY, 260f, world.height * 1.4f)
+        batch.draw(tex, world.width + 60f, world.centerY, 260f, world.height * 1.4f)
         batch.setTint(1f, 1f, 1f, 1f)
     }
 

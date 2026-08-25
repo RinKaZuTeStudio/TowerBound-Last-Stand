@@ -25,7 +25,10 @@ object AssetRepository {
     private val waterStrip: Bitmap by lazy { stripOf(EnvironmentPainter.waterFrames()) }
 
     private val towerStages = mutableListOf<Bitmap>()
-    private val turretBitmap: Bitmap by lazy { TowerPainter.generateTurret() }
+    private val turretBitmap: Bitmap by lazy {
+        PixelArtGenerator.pixelize(TowerPainter.generateTurret(), pixelSize = 4, outline = true, dither = true)
+    }
+    private var terrainBase: Bitmap? = null
 
     // keyed by enemy design id
     private val enemySheets = HashMap<String, HashMap<AnimState, SpriteSheet>>()
@@ -47,7 +50,8 @@ object AssetRepository {
         if (generated) { progress(1f); return }
         val t0 = System.currentTimeMillis()
 
-        // FX glows per damage flavor
+        // FX glows per damage flavor (smooth light halos — intentionally not
+        // pixelized: additive light reads as "glowing magical technology")
         val glows = mapOf(
             "fire" to Color.parseColor("#FF6D00"),
             "frost" to Color.parseColor("#4FC3F7"),
@@ -63,6 +67,8 @@ object AssetRepository {
         for ((k, col) in glows) {
             fxAssets["glow_$k"] = FxPainter.softGlow(col)
             fxAssets["spark_$k"] = FxPainter.spark(col)
+            // distinct pixel-art projectile sprites (no generic circles)
+            fxAssets["proj_$k"] = FxPainter.projectileSprite(k)
             done++; progress(done / totalSteps)
         }
         fxAssets["smoke"] = FxPainter.smoke()
@@ -73,37 +79,52 @@ object AssetRepository {
         fxAssets["slash_gold"] = FxPainter.slash(Color.parseColor("#FFC947"))
         fxAssets["star_gold"] = FxPainter.star(Color.parseColor("#FFC947"))
         fxAssets["star_green"] = FxPainter.star(Color.parseColor("#7CFF6B"))
-        fxAssets["xp_orb"] = FxPainter.xpOrb()
-        fxAssets["gold_coin"] = FxPainter.goldCoin()
-        fxAssets["shard_purple"] = FxPainter.shard(Color.parseColor("#9C27B0"))
+        fxAssets["xp_orb"] = PixelArtGenerator.pixelize(FxPainter.xpOrb(), pixelSize = 2, outline = true, dither = false)
+        fxAssets["gold_coin"] = PixelArtGenerator.pixelize(FxPainter.goldCoin(), pixelSize = 2, outline = true, dither = false)
+        fxAssets["shard_purple"] = PixelArtGenerator.pixelize(FxPainter.shard(Color.parseColor("#9C27B0")), pixelSize = 2, outline = true, dither = false)
         done += 12; progress(done / totalSteps)
 
-        // status icons
+        // status icons (pixel-art)
         for (k in StatusIconKind.entries) {
-            fxAssets["status_${k.name.lowercase()}"] = FxPainter.statusIcon(k)
+            fxAssets["status_${k.name.lowercase()}"] =
+                PixelArtGenerator.pixelize(FxPainter.statusIcon(k), pixelSize = 2, outline = true, dither = false)
         }
         done += StatusIconKind.entries.size; progress(done / totalSteps)
 
-        // tower damage stages
-        for (stage in 0 until 5) towerStages.add(TowerPainter.generate(stage))
+        // tower damage stages + turret (pixel-art)
+        for (stage in 0 until 5) {
+            towerStages.add(PixelArtGenerator.pixelize(TowerPainter.generate(stage), pixelSize = 4, outline = false, dither = true))
+        }
 
-        // environment props
-        propCache.put("tree_1", EnvironmentPainter.tree(7L))
-        propCache.put("tree_2", EnvironmentPainter.tree(23L))
-        propCache.put("bush_1", EnvironmentPainter.bush(3L))
-        propCache.put("bush_2", EnvironmentPainter.bush(9L))
-        propCache.put("rock_1", EnvironmentPainter.rock(5L))
-        propCache.put("rock_2", EnvironmentPainter.rock(15L))
-        propCache.put("grass_1", EnvironmentPainter.grassTuft(11L))
-        propCache.put("grass_2", EnvironmentPainter.grassTuft(29L))
-        propCache.put("cloud_1", EnvironmentPainter.cloud(13L))
-        propCache.put("cloud_2", EnvironmentPainter.cloud(31L))
+        // seamless pixel-art terrain (single shared tileable texture)
+        terrainBase = EnvironmentPainter.seamlessTerrain()
+
+        // menu scene backdrop (sky + parallax hills)
+        fxAssets["menu_sky"] = EnvironmentPainter.skyGradient()
+        fxAssets["menu_hills_far"] = EnvironmentPainter.hills(41L, "#2a2250")
+        fxAssets["menu_hills_near"] = EnvironmentPainter.hills(87L, "#1c1838")
+
+        // environment props (pixel-art)
+        fun prop(name: String, gen: () -> Bitmap) {
+            propCache.put(name, PixelArtGenerator.pixelize(gen(), pixelSize = 4, outline = true, dither = true))
+        }
+        prop("tree_1") { EnvironmentPainter.tree(7L) }
+        prop("tree_2") { EnvironmentPainter.tree(23L) }
+        prop("bush_1") { EnvironmentPainter.bush(3L) }
+        prop("bush_2") { EnvironmentPainter.bush(9L) }
+        prop("rock_1") { EnvironmentPainter.rock(5L) }
+        prop("rock_2") { EnvironmentPainter.rock(15L) }
+        prop("grass_1") { EnvironmentPainter.grassTuft(11L) }
+        prop("grass_2") { EnvironmentPainter.grassTuft(29L) }
+        prop("cloud_1") { EnvironmentPainter.cloud(13L) }
+        prop("cloud_2") { EnvironmentPainter.cloud(31L) }
         done += 10; progress(done / totalSteps)
 
-        // enemy sheets at gameplay resolution
+        // enemy sheets at gameplay resolution (pixel-art)
         for (design in EnemyDesigns.all) {
             generateEnemySheets(design)
             done += 0.5f
+            progress((done / totalSteps).coerceAtMost(0.95f))
         }
         for (boss in EnemyDesigns.bosses) {
             generateEnemySheets(boss, 192)
@@ -118,7 +139,10 @@ object AssetRepository {
     private fun generateEnemySheets(design: CharacterDesign, size: Int = 128) {
         val map = HashMap<AnimState, SpriteSheet>()
         for (state in AnimState.entries) {
-            map[state] = SpriteSheet.generate(design, state, size)
+            val sheet = SpriteSheet.generate(design, state, size)
+            // pixel-art conversion of the whole frame strip
+            val px = PixelArtGenerator.pixelize(sheet.bitmap, pixelSize = if (size >= 192) 4 else 3, outline = false, dither = true)
+            map[state] = SpriteSheet(design.id, state, px, sheet.frameCount, sheet.frameWidth, sheet.frameHeight)
         }
         enemySheets[design.id] = map
     }
@@ -148,13 +172,16 @@ object AssetRepository {
     fun enemySheet(designId: String, state: AnimState): SpriteSheet? =
         enemySheets[designId]?.get(state)
 
-    /** Hero sheets: full 256px, LRU-cached, generated on demand. */
+    /** Hero sheets: full 256px pixel-art, LRU-cached, generated on demand. */
     fun heroSheet(heroId: String, state: AnimState): SpriteSheet? {
         val map = heroSheetCache.get(heroId) ?: run {
             val design = HeroDesigns.byId(heroId)
             val m = HashMap<AnimState, SpriteSheet>()
             for (s in AnimState.entries) {
-                m[s] = SpriteSheet.generate(design, s, 256)
+                val sheet = SpriteSheet.generate(design, s, 256)
+                // pixel-art conversion (256px master -> 64-art-pixel grid)
+                val px = PixelArtGenerator.pixelize(sheet.bitmap, pixelSize = 4, outline = false, dither = true)
+                m[s] = SpriteSheet(design.id, s, px, sheet.frameCount, sheet.frameWidth, sheet.frameHeight)
             }
             heroSheetCache.put(heroId, m)
             m
@@ -166,7 +193,7 @@ object AssetRepository {
         heroSheetCache.remove(heroId)
     }
 
-    /** Single-frame portrait for menus (cheaper than full sheet). */
+    /** Single-frame portrait for menus (pixel-art, cheaper than full sheet). */
     fun portrait(heroId: String): Bitmap {
         portraits.get(heroId)?.let { return it }
         val design = if (HeroDesigns.all.any { it.id == heroId }) HeroDesigns.byId(heroId)
@@ -174,15 +201,14 @@ object AssetRepository {
         val bmp = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         CharacterPainter(design).paint(canvas, Pose(walkPhase = 0.2f, bob = 1f))
-        portraits.put(heroId, bmp)
-        return bmp
+        val px = PixelArtGenerator.pixelize(bmp, pixelSize = 4, outline = false, dither = true)
+        portraits.put(heroId, px)
+        return px
     }
 
-    fun terrain(seed: Long): Bitmap {
-        terrainCache.get(seed)?.let { return it }
-        val bmp = EnvironmentPainter.terrainTile(seed)
-        terrainCache.put(seed, bmp)
-        return bmp
+    /** Shared seamless terrain tile (all tiles identical -> no grid seams). */
+    fun terrain(@Suppress("UNUSED_PARAMETER") seed: Long): Bitmap {
+        return terrainBase ?: EnvironmentPainter.seamlessTerrain().also { terrainBase = it }
     }
 
     fun prop(name: String): Bitmap? = propCache.get(name)
@@ -199,6 +225,7 @@ object AssetRepository {
         var total = 0L
         for (b in fxAssets.values) total += b.byteCount
         total += explosionStrip.byteCount + waterStrip.byteCount + turretBitmap.byteCount
+        terrainBase?.let { total += it.byteCount }
         for (b in towerStages) total += b.byteCount
         for (m in enemySheets.values) for (s in m.values) total += s.bitmap.byteCount
         heroSheetCache.snapshot().values.forEach { m -> for (s in m.values) total += s.bitmap.byteCount }

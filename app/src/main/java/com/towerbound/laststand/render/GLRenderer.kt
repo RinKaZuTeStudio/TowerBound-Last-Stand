@@ -48,6 +48,7 @@ class GLRenderer(private val engine: GameEngine) : GLSurfaceView.Renderer {
     val textAtlas = TextAtlas()
     val camera = Camera()
     val worldRenderer = WorldRenderer(engine, this)
+    val menuScene = MenuSceneRenderer(engine)
 
     @Volatile var surfaceReady = false
         private set
@@ -91,15 +92,27 @@ class GLRenderer(private val engine: GameEngine) : GLSurfaceView.Renderer {
         engine.onFrame()
     }
 
-    /** Called by the engine each frame — world & entities. */
+    /** Called by the engine each frame — world & entities, or the animated
+     *  menu scene when no run is active. */
     fun renderWorld(deltaSeconds: Float) {
         if (!surfaceReady) return
         camera.update(deltaSeconds)
         worldRenderer.cameraRef = camera
+        val inWorld = engine.world != null
+        if (!inWorld) {
+            // static centered camera for the menu scene (no world clamping)
+            camera.worldW = 0f
+            camera.worldH = 0f
+            camera.snapTo(0f, 0f)
+        }
         val mvp = camera.computeMvp()
         batch.begin(mvp)
         try {
-            worldRenderer.render(batch, textures, textAtlas, camera)
+            if (inWorld) {
+                worldRenderer.render(batch, textures, textAtlas, camera)
+            } else {
+                menuScene.render(batch, textures, camera, deltaSeconds)
+            }
         } catch (t: Throwable) {
             GameLog.e("Renderer", "render error", t)
         } finally {

@@ -50,7 +50,7 @@ class TextAtlas {
             glyphW[ch] = w
             x += w + 10f
         }
-        atlasTexId = texManager.get("text_atlas", bmp)
+        atlasTexId = texManager.get("text_atlas", bmp, nearest = false)
     }
 
     fun texId(): Int = atlasTexId

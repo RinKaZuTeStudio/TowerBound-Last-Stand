@@ -6,7 +6,9 @@ A pure **native Android (Kotlin + OpenGL ES)** tower-defense survival game with 
 
 ## Highlights
 
-- **100% procedural graphics** — characters, towers, environment, FX, and 34 UI symbols are painted in code (Canvas → texture atlases). No PNGs, no audio files, tiny APK.
+- **100% procedural graphics** — every sprite, texture, icon, and sound is generated in code at runtime. No PNGs, no audio files, tiny APK.
+- **Genuine pixel-art pipeline** — assets are painted at high resolution, then converted to controlled pixel art (median-cut palettes, Bayer dithering, dark outlines, nearest-neighbor upscaling) for a premium modern pixel-art look.
+- **Canonical coordinate system** — world +Y up / screen +Y down with explicit `screenToWorld()` conversion; camera, joystick, and all render offsets share one convention.
 - **60 Hz fixed-timestep simulation** with hit-stop, slow-motion death sequences, and a splitmix64 seeded RNG (deterministic, replay-friendly).
 - **Real-time action combat** — virtual joystick + action buttons, dash with i-frames, knockback, 6 interacting status effects (burn, freeze, poison, stun, slow, bleed).
 - **Endless wave scaling** — HP +13%/wave, damage +9%/wave, elites every 5 waves, bosses every 10 waves, special events (SWARM / SIEGE / TREASURE / DOUBLE_XP).

@@ -21,7 +21,7 @@ class GameWorld(val seed: Long, val width: Float = 2400f, val height: Float = 16
     /** Central tower collision radius. */
     val towerRadius = 90f
 
-    /** Player spawns slightly below the tower. */
+    /** Player spawns just north of the tower (+Y = up on screen). */
     val playerSpawnX = centerX
     val playerSpawnY = centerY + 170f
 

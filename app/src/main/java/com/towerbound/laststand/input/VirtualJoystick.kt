@@ -5,8 +5,6 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.RadialGradient
-import android.graphics.Shader
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.atan2
@@ -137,6 +135,10 @@ class VirtualJoystick(
         val maxR = baseRadiusPx()
         var dx = (knobX - baseX) / maxR
         var dy = (knobY - baseY) / maxR
+        // Canonical coordinates: screen Y is DOWN-positive, world Y is UP-positive.
+        // Convert the screen-space drag into a world-space movement vector here
+        // (single explicit conversion point — root-cause fix for Y-axis inversion).
+        dy = -dy
         val len = sqrt(dx * dx + dy * dy)
         if (len < config.deadZone) {
             input.moveX = 0f; input.moveY = 0f
@@ -161,31 +163,46 @@ class VirtualJoystick(
         }
         val maxR = baseRadiusPx()
         val knobR = config.knobRadiusDp * resources.displayMetrics.density
-        val alpha = if (active) 1f else 0.25f
+        val alpha = if (active) 1f else 0.3f
 
-        // base ring glow
-        paint.shader = RadialGradient(baseX, baseY, maxR,
-            Color.argb((40 * alpha).toInt(), 124, 77, 255),
-            Color.argb(0, 124, 77, 255), Shader.TileMode.CLAMP)
-        paint.color = Color.WHITE
+        // pixel-art look: flat fills + chunky rings instead of smooth gradients
+
+        // base disc
+        paint.style = Paint.Style.FILL
+        paint.color = Color.argb((52 * alpha).toInt(), 16, 20, 44)
         canvas.drawCircle(baseX, baseY, maxR, paint)
-        paint.shader = null
 
-        // base ring
+        // chunky outer ring (double stroke = stepped pixel border)
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 3f
-        paint.color = Color.argb((150 * alpha).toInt(), 200, 208, 255)
+        paint.strokeWidth = 5f
+        paint.color = Color.argb((170 * alpha).toInt(), 88, 96, 160)
+        canvas.drawCircle(baseX, baseY, maxR - 3f, paint)
+        paint.strokeWidth = 2f
+        paint.color = Color.argb((140 * alpha).toInt(), 0, 229, 255)
         canvas.drawCircle(baseX, baseY, maxR, paint)
         paint.style = Paint.Style.FILL
 
-        // direction hint arrows when active
+        // 8 compass ticks
+        paint.color = Color.argb((190 * alpha).toInt(), 120, 130, 200)
+        for (i in 0 until 8) {
+            val a = i / 8f * 6.28318f
+            val ir = maxR * 0.76f
+            val or = maxR * 0.88f
+            canvas.drawLine(
+                baseX + cos(a) * ir, baseY + sin(a) * ir,
+                baseX + cos(a) * or, baseY + sin(a) * or,
+                paint.apply { strokeWidth = 4f }
+            )
+        }
+
+        // direction arrows when active (chunky)
         if (active) {
             val ang = atan2(knobY - baseY, knobX - baseX)
-            paint.color = Color.argb((200 * alpha).toInt(), 0, 229, 255)
-            for (r in floatArrayOf(maxR * 0.55f, maxR * 0.78f)) {
+            paint.color = Color.argb((220 * alpha).toInt(), 0, 229, 255)
+            for (r in floatArrayOf(maxR * 0.5f, maxR * 0.68f)) {
                 val ax = baseX + cos(ang) * r
                 val ay = baseY + sin(ang) * r
-                val s = 5f
+                val s = 6f
                 val path = android.graphics.Path()
                 path.moveTo(ax + cos(ang) * s, ay + sin(ang) * s)
                 path.lineTo(ax + cos(ang + 2.5f) * s, ay + sin(ang + 2.5f) * s)
@@ -195,15 +212,17 @@ class VirtualJoystick(
             }
         }
 
-        // knob
-        paint.shader = RadialGradient(knobX - knobR * 0.3f, knobY - knobR * 0.35f, knobR * 1.4f,
-            Color.argb((255 * alpha).toInt(), 240, 244, 255),
-            Color.argb((220 * alpha).toInt(), 90, 100, 180), Shader.TileMode.CLAMP)
+        // knob: pixel-art sphere — three shade bands + bright rim
+        paint.color = Color.argb((235 * alpha).toInt(), 60, 68, 130)
         canvas.drawCircle(knobX, knobY, knobR, paint)
-        paint.shader = null
+        paint.color = Color.argb((245 * alpha).toInt(), 120, 132, 210)
+        canvas.drawCircle(knobX - knobR * 0.14f, knobY - knobR * 0.16f, knobR * 0.82f, paint)
+        paint.color = Color.argb((255 * alpha).toInt(), 228, 236, 255)
+        canvas.drawCircle(knobX - knobR * 0.28f, knobY - knobR * 0.32f, knobR * 0.4f, paint)
+        // rim light
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 2.5f
-        paint.color = Color.argb((180 * alpha).toInt(), 0, 229, 255)
+        paint.strokeWidth = 3f
+        paint.color = Color.argb((200 * alpha).toInt(), 0, 229, 255)
         canvas.drawCircle(knobX, knobY, knobR, paint)
         paint.style = Paint.Style.FILL
 

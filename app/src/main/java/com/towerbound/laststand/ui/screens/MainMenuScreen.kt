@@ -24,7 +24,13 @@ class MainMenuScreen(context: Context) : Screen(context) {
     private val engine = GameEngine.get()
 
     init {
-        applyBackdrop(Color.parseColor("#070A18"), Color.parseColor("#151b3d"), Color.parseColor("#070A18"))
+        // translucent scrim so the animated GL world scene (sky, hills,
+        // tower, hero, fireflies) shows through behind the menu UI
+        applyBackdrop(
+            Color.parseColor("#B2070A18"),
+            Color.parseColor("#90151B3D"),
+            Color.parseColor("#B2070A18")
+        )
 
         val root = LinearLayout(context)
         root.orientation = LinearLayout.VERTICAL

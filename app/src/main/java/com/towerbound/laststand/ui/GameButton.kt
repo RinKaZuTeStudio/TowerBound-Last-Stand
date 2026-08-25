@@ -6,10 +6,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.RectF
 import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.animation.OvershootInterpolator
 import kotlin.math.sin
@@ -34,8 +31,6 @@ class GameButton(
         typeface = Typeface.DEFAULT_BOLD
         setShadowLayer(4f, 0f, 2f, Color.argb(160, 0, 0, 0))
     }
-    private val rect = RectF()
-    private var cornerRadius = UiKit.dp(context, 12f).toFloat()
 
     /** 0..1 press animation; 1 = fully pressed-in */
     private var pressT = 0f
@@ -60,7 +55,6 @@ class GameButton(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        cornerRadius = h * 0.28f
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -120,43 +114,52 @@ class GameButton(
         val cy = h / 2f
         val bw = w * squash
         val bh = h * squash
-        rect.set(cx - bw / 2f, cy - bh / 2f, cx + bw / 2f, cy + bh / 2f)
+        val left = cx - bw / 2f
+        val top = cy - bh / 2f
+        val right = cx + bw / 2f
+        val bottom = cy + bh / 2f
+        val bevel = UiKit.dp(context, 3f).toFloat()
 
-        // colors by style
-        val (top, bottom, border, glow) = when (style) {
-            Style.PRIMARY -> listOf(UiKit.cPrimary, UiKit.cPrimaryDark, UiKit.cAccent, 0x5900E5FF)
-            Style.SECONDARY -> listOf(UiKit.cBgPanelLight, UiKit.cBgPanel, UiKit.cPrimary, 0x507C4DFF)
-            Style.DANGER -> listOf(0xFF6b3a3a.toInt(), 0xFF8e2626.toInt(), UiKit.cDanger, 0x59FF5252)
-            Style.GHOST -> listOf(Color.TRANSPARENT, Color.TRANSPARENT, UiKit.cTextDim, 0)
-            Style.GOLD -> listOf(0xFFD9A521.toInt(), 0xFF9a6d10.toInt(), UiKit.cGold, 0x66FFC947)
+        // colors by style: [face, faceDark, bevelLight, outline, glow]
+        val (face, faceDark, bevelLight, outline, glow) = when (style) {
+            Style.PRIMARY -> listOf(UiKit.cPrimary, UiKit.cPrimaryDark, 0xFF6A79D2.toInt(), 0xFF101432.toInt(), 0x5900E5FF)
+            Style.SECONDARY -> listOf(UiKit.cBgPanelLight, UiKit.cBgPanel, 0xFF5A648F.toInt(), 0xFF0C1024.toInt(), 0x507C4DFF)
+            Style.DANGER -> listOf(0xFF8e2626.toInt(), 0xFF6b3a3a.toInt(), 0xFFC25B4A.toInt(), 0xFF2A0C0C.toInt(), 0x59FF5252)
+            Style.GHOST -> listOf(Color.TRANSPARENT, Color.TRANSPARENT, Color.TRANSPARENT, UiKit.cTextDim, 0)
+            Style.GOLD -> listOf(0xFFD9A521.toInt(), 0xFF9a6d10.toInt(), 0xFFF2CE6B.toInt(), 0xFF33200a.toInt(), 0x66FFC947)
         }
 
-        // shadow
-        if (style != Style.GHOST) {
-            paint.setShadowLayer(10f, 0f, 6f, Color.argb(90, 0, 0, 0))
-            paint.color = Color.BLACK
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
-            paint.clearShadowLayer()
-        }
-
-        // face gradient
         if (style == Style.GHOST) {
+            // ghost keeps the thin outline treatment
             paint.color = Color.argb(40, 255, 255, 255)
             paint.style = Paint.Style.STROKE
             paint.strokeWidth = UiKit.dp(context, 1.5f).toFloat()
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
+            canvas.drawRect(left, top, right, bottom, paint)
             paint.style = Paint.Style.FILL
         } else {
-            val face = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(top, bottom)
-            )
-            face.cornerRadius = cornerRadius
-            face.setBounds(rect.left.toInt(), rect.top.toInt(), rect.right.toInt(), rect.bottom.toInt())
-            canvas.save()
-            canvas.translate(rect.left, rect.top)
-            face.draw(canvas)
-            canvas.restore()
+            // drop shadow (offset chunky block)
+            paint.color = Color.argb(80, 0, 0, 0)
+            canvas.drawRect(left + bevel, top + bevel, right + bevel, bottom + bevel, paint)
+
+            // outer outline
+            paint.color = outline
+            canvas.drawRect(left, top, right, bottom, paint)
+
+            // face: two-tone pixel shading (upper face lighter than lower)
+            val innerL = left + bevel
+            val innerT = top + bevel
+            val innerR = right - bevel
+            val innerB = bottom - bevel
+            paint.color = face
+            canvas.drawRect(innerL, innerT, innerR, innerB, paint)
+            paint.color = faceDark
+            canvas.drawRect(innerL, innerT + (innerB - innerT) * 0.55f, innerR, innerB, paint)
+
+            // bevel: light top edge, dark bottom edge (chunky pixel bevel)
+            paint.color = bevelLight
+            canvas.drawRect(innerL, innerT, innerR, innerT + bevel, paint)
+            paint.color = Color.argb(120, 6, 8, 18)
+            canvas.drawRect(innerL, innerB - bevel, innerR, innerB, paint)
 
             // moving shimmer highlight
             clickTime += 0.016f
@@ -165,13 +168,6 @@ class GameButton(
             paint.alpha = (Color.alpha(glow) * (0.4f + 0.6f * (pressT))).coerceIn(0f, 255f).toInt()
             canvas.drawCircle(sx, cy, bh * 0.42f, paint)
             paint.alpha = 255
-
-            // border
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = UiKit.dp(context, 2f).toFloat()
-            paint.color = border
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
-            paint.style = Paint.Style.FILL
         }
 
         // label

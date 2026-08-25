@@ -246,8 +246,8 @@ class DamageNumber(
         if (age >= life) alive = false
     }
 
-    /** Render helpers: rising offset + scale envelope + alpha. */
-    fun offsetY(): Float = -(age * 90f) * (if (isCrit) 1.3f else 1f)
+    /** Render helpers: rising offset (+Y = up) + scale envelope + alpha. */
+    fun offsetY(): Float = (age * 90f) * (if (isCrit) 1.3f else 1f)
     fun scale(): Float {
         val pop = if (isCrit) 1.7f else 1.25f
         val t = (age / life).coerceIn(0f, 1f)
