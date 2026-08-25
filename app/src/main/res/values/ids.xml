@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tag keys used by programmatic widgets -->
+    <item name="tag_gold_chip" type="id" />
+    <item name="tag_gem_chip" type="id" />
+    <item name="tag_hero_id" type="id" />
+</resources>
