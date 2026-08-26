@@ -48,6 +48,14 @@ object MetaSession {
             }
             quests.ensureDailySet()
             GameSettings.initialize(context)
+
+            if (!profile.starterCurrencyGranted) {
+                profile.economy.grant(500, 10)
+                profile.starterCurrencyGranted = true
+                GameLog.i("MetaSession", "Granted starter currency 500 gold, 10 gems")
+                save.save(profile, quests, achievements)
+            }
+
             lastDailyRewardDay = profile.lastDailyResetDay
             initialized = true
             GameLog.i("MetaSession", "initialized (bestWave=${profile.bestWave}, gold=${profile.balanceGoldSnapshot()})")

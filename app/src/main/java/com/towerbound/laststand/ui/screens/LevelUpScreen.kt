@@ -197,6 +197,13 @@ class LevelUpScreen(
             val cy = h * 0.36f
             paint.color = Color.argb(30, 255, 255, 255)
             canvas.drawCircle(w / 2f, cy, UiKit.dp(context, 40f).toFloat(), paint)
+
+            val symSize = UiKit.dp(context, 64f).toFloat()
+            canvas.save()
+            canvas.translate(w / 2f - symSize / 2f, cy - symSize / 2f)
+            com.towerbound.laststand.assets.SymbolPainter.drawSymbol(canvas, paint, def.symbol, rarityColor, symSize.toInt())
+            canvas.restore()
+            
             paint.color = rarityColor
             paint.style = Paint.Style.STROKE
             paint.strokeWidth = 3f

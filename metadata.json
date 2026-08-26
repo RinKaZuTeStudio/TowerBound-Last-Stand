@@ -1,0 +1,6 @@
+{
+  "name": "Towerbound: Last Stand",
+  "description": "A pure native Android (Kotlin + OpenGL ES) tower-defense survival game with zero external assets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

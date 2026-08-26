@@ -105,14 +105,14 @@ class HeroProgress(
             if (level <= 1) return 80
             return (80 * Math.pow(level.toDouble(), 1.4)).toLong()
         }
-        const val MAX_LEVEL = 40
+        const val MAX_LEVEL = Int.MAX_VALUE
         const val UNLOCK_SHARDS = 30
         const val UNLOCK_GOLD = 900L
 
         fun fromJson(json: JSONObject): HeroProgress = HeroProgress(
             json.optString("id", "ARIC"),
             json.optBoolean("unlocked", false),
-            json.optInt("level", 1).coerceIn(1, MAX_LEVEL),
+            json.optInt("level", 1).coerceAtLeast(1),
             json.optLong("xp", 0L).coerceAtLeast(0),
             json.optInt("shards", 0).coerceAtLeast(0)
         )
@@ -153,7 +153,7 @@ class HeroProgress(
  * Tower permanent upgrade track (design: TOWER SYSTEM upgrades 1-5).
  */
 object TowerUpgrades {
-    const val MAX_LEVEL = 10
+    const val MAX_LEVEL = Int.MAX_VALUE
 
     enum class Kind(val label: String, val baseCost: Int, val costGrowth: Float, val perLevel: Float) {
         MAX_HP("Maximum HP", 120f.toInt(), 1.5f, 160f),
@@ -361,6 +361,8 @@ class PlayerProfile {
 
     /** Tutorial state. */
     var tutorialDone: Boolean = false
+    /** Starter currency flag (new account gets exactly 500 Gold, 10 Gems once). */
+    var starterCurrencyGranted: Boolean = false
 
     /** Daily reset marker (epoch day). */
     var lastDailyResetDay: Int = 0
@@ -456,6 +458,7 @@ class PlayerProfile {
         json.put("totalRuns", totalRuns)
         json.put("playtime", totalPlaytimeSeconds)
         json.put("tutorialDone", tutorialDone)
+        json.put("starterCurrencyGranted", starterCurrencyGranted)
         json.put("lastDailyResetDay", lastDailyResetDay)
         return json
     }
@@ -475,7 +478,7 @@ class PlayerProfile {
         }
         json.optJSONObject("tower")?.let { tower ->
             for (k in TowerUpgrades.Kind.entries) {
-                towerLevels[k] = tower.optInt(k.name, 0).coerceIn(0, TowerUpgrades.MAX_LEVEL)
+                towerLevels[k] = tower.optInt(k.name, 0).coerceAtLeast(0)
             }
         }
         selectedHero = json.optString("selectedHero", "ARIC")
@@ -484,6 +487,7 @@ class PlayerProfile {
         totalRuns = json.optLong("totalRuns", 0)
         totalPlaytimeSeconds = json.optLong("playtime", 0)
         tutorialDone = json.optBoolean("tutorialDone", false)
+        starterCurrencyGranted = json.optBoolean("starterCurrencyGranted", false)
         lastDailyResetDay = json.optInt("lastDailyResetDay", 0)
     }
 

@@ -266,12 +266,12 @@ class GameFlow private constructor(private val activity: MainActivity) {
                     }
                     engine.stateManager.transition(GameState.GAMEPLAY)
                     GameLog.i("GameFlow", "run started, hero=$heroId")
-                    // first-run tutorial
-                    if (!MetaSession.profile.tutorialDone) {
-                        activity.runOnUiThread {
-                            activity.screenManager.push(TutorialOverlay(activity, onDone = {}))
-                        }
-                    }
+                    // first-run tutorial disabled as per requirements
+                    // if (!MetaSession.profile.tutorialDone) {
+                    //    activity.runOnUiThread {
+                    //        activity.screenManager.push(TutorialOverlay(activity, onDone = {}))
+                    //    }
+                    // }
                     // dynamic quality + debug overlay
                     PerformanceManager.applyQuality(
                         com.towerbound.laststand.meta.GameSettings.get(),
