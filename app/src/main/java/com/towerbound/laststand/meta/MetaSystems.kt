@@ -224,6 +224,12 @@ class InventoryManager {
     /** Extensible loadout slots (future relics/artifacts). */
     val loadout = HashMap<String, String>()   // slotName -> itemId
 
+    /** Gear instances owned by the player. */
+    val gear = mutableListOf<GearInstance>()
+    
+    /** Gear slot -> GearInstance id */
+    val gearLoadout = HashMap<String, String>()
+
     fun add(itemId: String, qty: Int = 1) {
         if (qty <= 0) return
         items[itemId] = (items[itemId] ?: 0) + qty
@@ -270,6 +276,45 @@ class InventoryManager {
         loadout.remove(slot)
     }
 
+    fun equipGear(instanceId: String): Boolean {
+        val g = gear.find { it.id == instanceId } ?: return false
+        val slot = g.type.slot
+        // Support double rings
+        val slotName = if (slot == GearSlot.RING_1) {
+            if (gearLoadout[GearSlot.RING_1.name] == null) GearSlot.RING_1.name
+            else if (gearLoadout[GearSlot.RING_2.name] == null) GearSlot.RING_2.name
+            else GearSlot.RING_1.name // overwrite 1
+        } else {
+            slot.name
+        }
+        gearLoadout[slotName] = instanceId
+        return true
+    }
+
+    fun unequipGear(slotName: String) {
+        gearLoadout.remove(slotName)
+    }
+
+    fun sellGear(instanceId: String): Long {
+        val g = gear.find { it.id == instanceId } ?: return 0
+        if (g.isLocked) return 0
+        if (gearLoadout.containsValue(instanceId)) return 0
+        gear.remove(g)
+        return g.getSellValue()
+    }
+
+    fun upgradeGear(instanceId: String): Boolean {
+        val g = gear.find { it.id == instanceId } ?: return false
+        val cost = g.getUpgradeCost()
+        val p = com.towerbound.laststand.meta.MetaSession.profile
+        val res = p.economy.spend(goldCost = cost)
+        if (res is EconomyManager.Transaction.Success) {
+            g.level += 1
+            return true
+        }
+        return false
+    }
+
     fun toJson(): JSONObject {
         val json = JSONObject()
         val itemsArr = org.json.JSONArray()
@@ -286,6 +331,15 @@ class InventoryManager {
         val slots = JSONObject()
         for ((slot, item) in loadout) slots.put(slot, item)
         json.put("loadout", slots)
+
+        val gearArr = org.json.JSONArray()
+        for (g in gear) gearArr.put(g.toJson())
+        json.put("gear", gearArr)
+        
+        val gearSlots = JSONObject()
+        for ((slot, id) in gearLoadout) gearSlots.put(slot, id)
+        json.put("gearLoadout", gearSlots)
+
         return json
     }
 
@@ -295,6 +349,9 @@ class InventoryManager {
         ownedSkins.add("default")
         equippedSkins.clear()
         loadout.clear()
+        gear.clear()
+        gearLoadout.clear()
+        
         val itemsArr = json.optJSONArray("items") ?: return
         for (i in 0 until itemsArr.length()) {
             val item = itemsArr.optJSONObject(i) ?: continue
@@ -310,11 +367,24 @@ class InventoryManager {
                 equippedSkins[hero] = equip.optString(hero)
             }
         }
-        json.optJSONObject("loadout")?.let { slots ->
-            val keys = slots.keys()
+        json.optJSONObject("loadout")?.let { s ->
+            val keys = s.keys()
             while (keys.hasNext()) {
                 val slot = keys.next()
-                loadout[slot] = slots.optString(slot)
+                loadout[slot] = s.optString(slot)
+            }
+        }
+        
+        json.optJSONArray("gear")?.let { arr ->
+            for (i in 0 until arr.length()) {
+                arr.optJSONObject(i)?.let { gear.add(GearInstance.fromJson(it)) }
+            }
+        }
+        json.optJSONObject("gearLoadout")?.let { gl ->
+            val keys = gl.keys()
+            while (keys.hasNext()) {
+                val slot = keys.next()
+                gearLoadout[slot] = gl.optString(slot)
             }
         }
     }
@@ -322,6 +392,7 @@ class InventoryManager {
     fun resetForTesting() {
         items.clear(); ownedSkins.clear(); ownedSkins.add("default")
         equippedSkins.clear(); loadout.clear()
+        gear.clear(); gearLoadout.clear()
     }
 }
 

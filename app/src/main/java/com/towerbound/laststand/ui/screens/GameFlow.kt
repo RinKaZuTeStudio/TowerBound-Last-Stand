@@ -65,7 +65,8 @@ class GameFlow private constructor(private val activity: MainActivity) {
         var wave: Int = 1
         var time: Float = 0f
         var xp: Long = 0
-        fun reset() { kills = 0; gold = 0; damageDealt = 0f; wave = 1; time = 0f; xp = 0 }
+        val droppedGear = mutableListOf<com.towerbound.laststand.meta.GearInstance>()
+        fun reset() { kills = 0; gold = 0; damageDealt = 0f; wave = 1; time = 0f; xp = 0; droppedGear.clear() }
     }
 
     /** Hero XP from the most recent finished run (results screen readout). */
@@ -186,6 +187,9 @@ class GameFlow private constructor(private val activity: MainActivity) {
                     waveSystem.onWaveCleared = { wave ->
                         runStats.wave = wave + 1
                         MetaSession.quests.onWaveSurvived(wave)
+                        if (kotlin.random.Random.nextFloat() < 0.2f) { // 20% drop rate
+                            runStats.droppedGear.add(com.towerbound.laststand.meta.GearInstance.generateRandom(wave))
+                        }
                     }
                     bossSystem.onBossSpawn = { name ->
                         activity.runOnUiThread { showBanner(name, 0xFFFF5252.toInt(), large = true) }
@@ -196,10 +200,11 @@ class GameFlow private constructor(private val activity: MainActivity) {
                     bossSystem.onBossPhase = { phase ->
                         activity.runOnUiThread { showBanner("PHASE $phase", 0xFFFF8A65.toInt()) }
                     }
-                    bossSystem.onBossDefeated = { defeated ->
+                    bossSystem.onBossDefeated = { _ ->
                         runStats.kills += 5
                         runStats.gold += 120
                         xpSystem.addXp(140f)
+                        runStats.droppedGear.add(com.towerbound.laststand.meta.GearInstance.generateRandom(waveSystem.currentWave))
                         AudioDirector.setMood(AudioDirector.MusicMood.BATTLE)
                         AudioDirector.play(AudioDirector.Sfx.EXPLOSION)
                         Haptics.fire(Haptics.Preset.EXPLOSION)
@@ -495,6 +500,12 @@ class GameFlow private constructor(private val activity: MainActivity) {
         runStats.time = engine.clock.simTime
         runStats.xp = (xpSystem?.totalXpEarned ?: 0f).toLong()
         lastRunXp = runStats.xp
+        
+        // Add dropped gear to inventory
+        for (g in runStats.droppedGear) {
+            MetaSession.profile.inventory.gear.add(g)
+        }
+
         val summary = MetaSession.onRunFinished(
             wave = runStats.wave,
             kills = runStats.kills,

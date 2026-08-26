@@ -14,6 +14,7 @@
     <!-- Main menu -->
     <string name="menu_play">PLAY</string>
     <string name="menu_heroes">HEROES</string>
+    <string name="menu_gear">GEAR</string>
     <string name="menu_upgrades">UPGRADES</string>
     <string name="menu_shop">SHOP</string>
     <string name="menu_collection">COLLECTION</string>

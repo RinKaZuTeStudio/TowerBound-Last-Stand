@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Root layout: layer 0 = OpenGL surface (game world, added programmatically),
+  layer 1 = HUD overlay, layer 2 = menu/screen stack (fragments-free).
+  Insets (notches) are consumed by the game engine and forwarded to the HUD.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    android:keepScreenOn="true">
+
+    <!-- GLSurfaceView is inserted here at index 0 by MainActivity -->
+
+    <FrameLayout
+        android:id="@+id/hud_layer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <FrameLayout
+        android:id="@+id/screen_layer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</FrameLayout>

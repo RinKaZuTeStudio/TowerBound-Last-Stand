@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Towerbound: Last Stand</string>
+
+    <!-- Splash / loading -->
+    <string name="splash_title">TOWERBOUND</string>
+    <string name="splash_subtitle">LAST STAND</string>
+    <string name="loading_assets">Generating assets…</string>
+    <string name="loading_renderer">Initializing renderer…</string>
+    <string name="loading_systems">Loading systems…</string>
+    <string name="loading_battlefield">Preparing battlefield…</string>
+    <string name="loading_continue">Tap to continue</string>
+
+    <!-- Main menu -->
+    <string name="menu_play">PLAY</string>
+    <string name="menu_heroes">HEROES</string>
+    <string name="menu_upgrades">UPGRADES</string>
+    <string name="menu_shop">SHOP</string>
+    <string name="menu_collection">COLLECTION</string>
+    <string name="menu_settings">SETTINGS</string>
+    <string name="menu_resume_run">RESUME RUN</string>
+    <string name="best_wave_label">Best Wave</string>
+
+    <!-- Currency -->
+    <string name="gold">Gold</string>
+    <string name="gems">Gems</string>
+
+    <!-- HUD -->
+    <string name="hud_wave">Wave %1$d</string>
+    <string name="hud_enemies">%1$d enemies</string>
+    <string name="hud_tower">Tower</string>
+    <string name="hud_pause">Pause</string>
+    <string name="hud_auto_attack">Auto-attack</string>
+    <string name="ability">Ability</string>
+    <string name="ultimate">Ultimate</string>
+    <string name="level_up_title">LEVEL UP</string>
+    <string name="level_up_hint">Choose an upgrade</string>
+
+    <!-- Pause -->
+    <string name="pause_title">PAUSED</string>
+    <string name="pause_resume">RESUME</string>
+    <string name="pause_restart">RESTART</string>
+    <string name="pause_quit">MAIN MENU</string>
+
+    <!-- Game over / results -->
+    <string name="game_over_title">THE TOWER HAS FALLEN</string>
+    <string name="results_title">RUN RESULTS</string>
+    <string name="results_wave">Wave reached</string>
+    <string name="results_kills">Enemies slain</string>
+    <string name="results_damage">Damage dealt</string>
+    <string name="results_gold">Gold earned</string>
+    <string name="results_xp">Hero XP gained</string>
+    <string name="results_best">New best wave!</string>
+    <string name="results_retry">RETRY</string>
+    <string name="results_menu">MAIN MENU</string>
+
+    <!-- Heroes screen -->
+    <string name="heroes_title">HEROES</string>
+    <string name="hero_locked">LOCKED</string>
+    <string name="hero_unlock">UNLOCK</string>
+    <string name="hero_select">SELECT</string>
+    <string name="hero_selected">SELECTED</string>
+    <string name="hero_level">Level %1$d</string>
+    <string name="hero_shards">%1$d/%2$d shards</string>
+    <string name="passive_label">Passive</string>
+    <string name="active_label">Active</string>
+    <string name="ultimate_label">Ultimate</string>
+
+    <!-- Upgrades screen -->
+    <string name="upgrades_title">UPGRADES</string>
+    <string name="upgrade_max">MAX</string>
+    <string name="buy">BUY</string>
+
+    <!-- Shop -->
+    <string name="shop_title">SHOP</string>
+    <string name="shop_heroes">Unlock Heroes</string>
+    <string name="shop_upgrades">Permanent Upgrades</string>
+    <string name="shop_cosmetics">Cosmetics</string>
+    <string name="shop_daily">Daily Free Reward</string>
+    <string name="shop_claim">CLAIM</string>
+    <string name="shop_claimed">CLAIMED</string>
+    <string name="shop_confirm">Confirm purchase</string>
+    <string name="shop_confirm_msg">Buy %1$s for %2$d %3$s?</string>
+    <string name="confirm">CONFIRM</string>
+    <string name="cancel">CANCEL</string>
+    <string name="not_enough">Not enough %1$s</string>
+    <string name="purchased">Purchased!</string>
+
+    <!-- Collection / inventory -->
+    <string name="collection_title">COLLECTION</string>
+    <string name="equip">EQUIP</string>
+    <string name="unequip">UNEQUIP</string>
+    <string name="equipped">EQUIPPED</string>
+
+    <!-- Quests & achievements -->
+    <string name="quests_title">QUESTS</string>
+    <string name="achievements_title">ACHIEVEMENTS</string>
+    <string name="claim_reward">CLAIM</string>
+    <string name="claimed">CLAIMED</string>
+
+    <!-- Settings -->
+    <string name="settings_title">SETTINGS</string>
+    <string name="settings_audio">Audio</string>
+    <string name="settings_music">Music volume</string>
+    <string name="settings_sfx">SFX volume</string>
+    <string name="settings_mute">Mute all</string>
+    <string name="settings_haptics">Haptic feedback</string>
+    <string name="settings_graphics">Graphics</string>
+    <string name="settings_quality">Quality</string>
+    <string name="quality_low">Low</string>
+    <string name="quality_medium">Medium</string>
+    <string name="quality_high">High</string>
+    <string name="quality_auto">Auto</string>
+    <string name="settings_accessibility">Accessibility</string>
+    <string name="settings_ui_scale">UI scale</string>
+    <string name="settings_reduce_shake">Reduce screen shake</string>
+    <string name="settings_reduce_vfx">Reduce effects</string>
+    <string name="settings_reduce_flash">Reduce flashing</string>
+    <string name="settings_high_contrast">High contrast</string>
+    <string name="settings_colorblind">Colorblind-friendly indicators</string>
+    <string name="settings_language">Language</string>
+    <string name="lang_english">English</string>
+    <string name="lang_arabic">العربية</string>
+    <string name="lang_system">System default</string>
+    <string name="settings_joystick">Joystick size</string>
+    <string name="settings_auto_attack">Auto-attack</string>
+    <string name="settings_tutorial_replay">Replay tutorial</string>
+    <string name="settings_debug">Show performance overlay</string>
+
+    <!-- Tutorial -->
+    <string name="tutorial_title">WELCOME, DEFENDER</string>
+    <string name="tutorial_skip">SKIP</string>
+    <string name="tutorial_next">NEXT</string>
+    <string name="tutorial_done">GOT IT</string>
+    <string name="tutorial_move">Drag the left joystick to move your hero</string>
+    <string name="tutorial_attack">Your hero attacks nearby enemies automatically. Toggle auto-attack here</string>
+    <string name="tutorial_abilities">Use your ability and ultimate buttons on the right</string>
+    <string name="tutorial_tower">Protect the central tower. If it falls, the run ends</string>
+    <string name="tutorial_waves">Enemies attack in waves. Every 5th wave brings elites, every 10th a boss</string>
+    <string name="tutorial_xp">Collect the orbs enemies drop to level up</string>
+    <string name="tutorial_upgrades">On level up, choose one of three upgrade cards</string>
+
+    <!-- Boss -->
+    <string name="boss_incoming">BOSS INCOMING</string>
+    <string name="elite_wave">ELITE WAVE</string>
+    <string name="wave_cleared">WAVE %1$d CLEARED</string>
+
+    <!-- Misc -->
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="close">CLOSE</string>
+    <string name="error_generic">Something went wrong, but your progress is safe.</string>
+    <string name="save_recovered">Recovered your data from a backup save.</string>
+
+    <!-- Results extras -->
+    <string name="results_time">Survived</string>
+    <string name="equipped_owns">Owned</string>
+
+    <!-- Daily quests -->
+    <string name="quest_kill">Slay 50 enemies</string>
+    <string name="quest_waves">Survive 10 waves</string>
+    <string name="quest_gold">Collect 500 gold</string>
+
+    <!-- Achievements -->
+    <string name="ach_kill_100">First Blood</string>
+    <string name="ach_kill_100_desc">Slay 100 enemies</string>
+    <string name="ach_kill_1000">Slayer</string>
+    <string name="ach_kill_1000_desc">Slay 1,000 enemies</string>
+    <string name="ach_kill_10000">Legend of the Battlefield</string>
+    <string name="ach_kill_10000_desc">Slay 10,000 enemies</string>
+    <string name="ach_wave_10">Holding the Line</string>
+    <string name="ach_wave_10_desc">Reach wave 10</string>
+    <string name="ach_wave_25">Siege Breaker</string>
+    <string name="ach_wave_25_desc">Reach wave 25</string>
+    <string name="ach_wave_50">Untouchable Fortress</string>
+    <string name="ach_wave_50_desc">Reach wave 50</string>
+    <string name="ach_heroes_3">Squad Leader</string>
+    <string name="ach_heroes_3_desc">Unlock 3 heroes</string>
+    <string name="ach_heroes_all">Full Roster</string>
+    <string name="ach_heroes_all_desc">Unlock all 8 heroes</string>
+    <string name="ach_runs_10">Regular Defender</string>
+    <string name="ach_runs_10_desc">Complete 10 runs</string>
+    <string name="ach_runs_50">Towerbound Veteran</string>
+    <string name="ach_runs_50_desc">Complete 50 runs</string>
+    <string name="ach_boss_5">Giant Slayer</string>
+    <string name="ach_boss_5_desc">Defeat 5 bosses</string>
+    <string name="ach_boss_20">Boss Executioner</string>
+    <string name="ach_boss_20_desc">Defeat 20 bosses</string>
+    <string name="ach_upgrades_50">Master Builder</string>
+    <string name="ach_upgrades_50_desc">Choose 50 upgrade cards</string>
+    <string name="ach_gold_10000">Treasurer</string>
+    <string name="ach_gold_10000_desc">Earn 10,000 gold in total</string>
+</resources>

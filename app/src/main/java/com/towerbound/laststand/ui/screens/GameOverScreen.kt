@@ -92,6 +92,21 @@ class GameOverScreen(
                     addStatRow(panel, "Shards", "+${sum.shardsGranted}", UiKit.cAccentWarm)
                 }
             }
+            if (stats.droppedGear.isNotEmpty()) {
+                val dropRow = LinearLayout(context)
+                dropRow.orientation = LinearLayout.HORIZONTAL
+                val l = UiKit.text(context, "Gear Found", 14f, UiKit.cTextDim, bold = false)
+                l.gravity = Gravity.START
+                dropRow.addView(l, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                
+                val gv = UiKit.text(context, "${stats.droppedGear.size} Items", 15f, 0xFF4DA6FF.toInt())
+                dropRow.addView(gv, LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ))
+                panel.addView(dropRow, LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = UiKit.dp(context, 4f) })
+            }
             scrollable.addView(panel, LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply { topMargin = UiKit.dp(context, 14f) })

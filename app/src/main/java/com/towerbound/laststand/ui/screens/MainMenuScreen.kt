@@ -115,15 +115,18 @@ class MainMenuScreen(context: Context) : Screen(context) {
 
         menuRow(
             context.getString(R.string.menu_heroes) to GameButton.Style.PRIMARY,
-            context.getString(R.string.menu_shop) to GameButton.Style.SECONDARY
+            context.getString(R.string.menu_gear) to GameButton.Style.PRIMARY
         )
         menuRow(
-            context.getString(R.string.quests_title) to GameButton.Style.SECONDARY,
+            context.getString(R.string.menu_shop) to GameButton.Style.SECONDARY,
             context.getString(R.string.menu_collection) to GameButton.Style.SECONDARY
         )
         menuRow(
-            context.getString(R.string.menu_settings) to GameButton.Style.GHOST,
+            context.getString(R.string.quests_title) to GameButton.Style.GHOST,
             context.getString(R.string.achievements_title) to GameButton.Style.GHOST
+        )
+        menuRow(
+            context.getString(R.string.menu_settings) to GameButton.Style.GHOST
         )
 
         root.addView(grid, LinearLayout.LayoutParams(
@@ -144,6 +147,7 @@ class MainMenuScreen(context: Context) : Screen(context) {
             act.getString(R.string.quests_title) -> act.screenManager.push(QuestsScreen(act))
             act.getString(R.string.achievements_title) -> act.screenManager.push(QuestsScreen(act))
             act.getString(R.string.menu_collection) -> act.screenManager.push(CollectionScreen(act))
+            act.getString(R.string.menu_gear) -> act.screenManager.push(GearScreen(act))
             act.getString(R.string.menu_settings) -> act.screenManager.push(SettingsScreen(act))
         }
     }

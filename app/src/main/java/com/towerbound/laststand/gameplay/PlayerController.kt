@@ -271,6 +271,13 @@ class PlayerController(val input: InputState) : SimSystem {
             "VOLT" -> { s.maxHp = 90f; s.moveSpeed = 250f; s.attackDamage = 8f; s.attackSpeed = 1.8f; s.attackRange = 260f; s.projectileSpeed = 820f }
             "BRONN" -> { s.maxHp = 140f; s.moveSpeed = 215f; s.attackDamage = 11f; s.attackSpeed = 0.9f; s.attackRange = 110f; s.armor = 6f }
         }
+        
+        // Apply equipped gear stats
+        val inv = com.towerbound.laststand.meta.MetaSession.profile.inventory
+        for ((_, instanceId) in inv.gearLoadout) {
+            inv.gear.find { it.id == instanceId }?.applyToStats(s)
+        }
+        
         return s
     }
 }
