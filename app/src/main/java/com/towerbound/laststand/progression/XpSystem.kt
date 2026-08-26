@@ -30,16 +30,16 @@ object UpgradePool {
     val AS_PLUS = UpgradeDef("as_plus", "Quickened Grip", "+10% attack speed", com.towerbound.laststand.ui.Rarity.COMMON, 8, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.SWIFT, effect = {
         it.pct.attackSpeed += 0.10f
 })
-    val MS_PLUS = UpgradeDef("ms_plus", "Fleet Boots", "+10% move speed", com.towerbound.laststand.ui.Rarity.COMMON, 6, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.BOOT, effect = {
+    val MS_PLUS = UpgradeDef("ms_plus", "Fleet Boots", "+10% move speed", com.towerbound.laststand.ui.Rarity.COMMON, 6, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.DASH, effect = {
         it.pct.moveSpeed += 0.10f
 })
-    val CRIT_CHANCE = UpgradeDef("crit_chance", "Keen Eye", "+6% crit chance", com.towerbound.laststand.ui.Rarity.UNCOMMON, 6, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.CROSSHAIR, effect = {
+    val CRIT_CHANCE = UpgradeDef("crit_chance", "Keen Eye", "+6% crit chance", com.towerbound.laststand.ui.Rarity.UNCOMMON, 6, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.BOW, effect = {
         it.pct.critChance += 0.06f
 })
     val CRIT_DMG = UpgradeDef("crit_dmg", "Executioner", "+25% crit damage", com.towerbound.laststand.ui.Rarity.UNCOMMON, 6, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.SKULL, effect = {
         it.pct.critDamage += 0.25f
 })
-    val LIFESTEAL = UpgradeDef("lifesteal", "Vampiric Edge", "+4% lifesteal", com.towerbound.laststand.ui.Rarity.RARE, 5, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.DROP, effect = {
+    val LIFESTEAL = UpgradeDef("lifesteal", "Vampiric Edge", "+4% lifesteal", com.towerbound.laststand.ui.Rarity.RARE, 5, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.HEAL, effect = {
         it.pct.lifesteal += 0.04f
 })
     val ARMOR_PLUS = UpgradeDef("armor_plus", "Iron Skin", "+15 armor", com.towerbound.laststand.ui.Rarity.COMMON, 8, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.SHIELD, effect = {
@@ -51,7 +51,7 @@ object UpgradePool {
     val AOE_PLUS = UpgradeDef("aoe_plus", "Amplified Force", "+20% area of effect", com.towerbound.laststand.ui.Rarity.UNCOMMON, 5, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.STATIC, effect = {
         it.pct.aoeSize += 0.20f
 })
-    val TOWER_HEAL = UpgradeDef("tower_heal", "Mason's Blessing", "Tower heals 15% HP now + +2 regen", com.towerbound.laststand.ui.Rarity.RARE, 5, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.HEART, effect = {
+    val TOWER_HEAL = UpgradeDef("tower_heal", "Mason's Blessing", "Tower heals 15% HP now + +2 regen", com.towerbound.laststand.ui.Rarity.RARE, 5, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.HEAL, effect = {
         it.flat.hpRegen += 2f
     })
     val PROJECTILE = UpgradeDef("projectile", "Split Shot", "+1 projectile", com.towerbound.laststand.ui.Rarity.EPIC, 4, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.BOW, effect = {
@@ -60,7 +60,7 @@ object UpgradePool {
     val TOWER_DMG = UpgradeDef("tower_dmg", "Arcane Conduits", "+25% tower damage", com.towerbound.laststand.ui.Rarity.RARE, 5, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.TURRET, effect = {
         it.pct.attackDamage += 0.25f
 })
-    val HP_PLUS = UpgradeDef("hp_plus", "Vigor", "+15% max HP", com.towerbound.laststand.ui.Rarity.COMMON, 8, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.HEART, effect = {
+    val HP_PLUS = UpgradeDef("hp_plus", "Vigor", "+15% max HP", com.towerbound.laststand.ui.Rarity.COMMON, 8, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.HEAL, effect = {
         it.pct.maxHp += 0.15f
 })
     val RANGE_PLUS = UpgradeDef("range_plus", "Long Reach", "+12% attack range", com.towerbound.laststand.ui.Rarity.COMMON, 6, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.ARROW_UP, effect = {
@@ -71,11 +71,11 @@ object UpgradePool {
 })
 
     /* ---- elemental synergy upgrades (design: SYNERGY SYSTEM) ---- */
-    val BURNING_CRIT = UpgradeDef("burning_crit", "Burning Crit", "Crits ignite enemies (burn synergy)", com.towerbound.laststand.ui.Rarity.EPIC, 1, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.FIRE,
+    val BURNING_CRIT = UpgradeDef("burning_crit", "Burning Crit", "Crits ignite enemies (burn synergy)", com.towerbound.laststand.ui.Rarity.EPIC, 1, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.BATTLE_CRY,
         effect = { }, synergyTag = "burning_crit")
-    val THUNDERSTORM = UpgradeDef("thunderstorm", "Thunderstorm", "Attacks chain lightning (storm synergy)", com.towerbound.laststand.ui.Rarity.LEGENDARY, 1, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.LIGHTNING,
+    val THUNDERSTORM = UpgradeDef("thunderstorm", "Thunderstorm", "Attacks chain lightning (storm synergy)", com.towerbound.laststand.ui.Rarity.LEGENDARY, 1, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.THUNDER,
         effect = { it.pct.attackSpeed += 0.1f }, synergyTag = "thunderstorm")
-    val FROST_NOVA = UpgradeDef("frost_nova", "Frost Nova", "Attacks chill enemies (frost synergy)", com.towerbound.laststand.ui.Rarity.EPIC, 1, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.SNOWFLAKE,
+    val FROST_NOVA = UpgradeDef("frost_nova", "Frost Nova", "Attacks chill enemies (frost synergy)", com.towerbound.laststand.ui.Rarity.EPIC, 1, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.FROST_NOVA,
         effect = { }, synergyTag = "frost_nova")
     val TOXIC_BARRAGE = UpgradeDef("toxic_barrage", "Toxic Barrage", "Attats poison on hit (toxin synergy)", com.towerbound.laststand.ui.Rarity.EPIC, 1, symbol = com.towerbound.laststand.assets.SymbolPainter.Symbol.CURSE,
         effect = { }, synergyTag = "toxic_barrage")
