@@ -38,6 +38,7 @@ class MenuSceneRenderer(private val engine: GameEngine) {
     @Volatile var dim: Float = 0f
 
     fun render(batch: SpriteBatch, textures: TextureManager, camera: Camera, dt: Float) {
+        if (!AssetRepository.generated) return
         time += dt
         if (!initialized) initScene(camera)
         heroAnim.update(dt)
